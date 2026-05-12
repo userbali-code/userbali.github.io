@@ -1,98 +1,3 @@
-# Sistem Form Order Terhubung Google Spreadsheet + WhatsApp
-
-Sistem ini memiliki fitur:
-
-* Input order customer
-* Data otomatis masuk ke Google Spreadsheet
-* Tombol kirim ke WhatsApp admin
-* Rekap order otomatis
-* Bisa dipakai di HP & laptop
-
----
-
-# 1. Buat Google Spreadsheet
-
-1. Buka Google Spreadsheet
-2. Buat spreadsheet baru
-3. Buat header seperti ini:
-
-| Tanggal | Nama | WhatsApp | Produk | Jumlah | Alamat | Catatan |
-| ------- | ---- | -------- | ------ | ------ | ------ | ------- |
-
----
-
-# 2. Buka Google Apps Script
-
-Klik:
-
-Extensions → Apps Script
-
-Hapus semua kode lalu ganti dengan kode berikut:
-
-```javascript
-function doPost(e) {
-
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Sheet1");
-
-  var data = JSON.parse(e.postData.contents);
-
-  sheet.appendRow([
-    new Date(),
-    data.nama,
-    data.whatsapp,
-    data.produk,
-    data.jumlah,
-    data.alamat,
-    data.catatan
-  ]);
-
-  return ContentService
-    .createTextOutput(JSON.stringify({
-      status: "success"
-    }))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-```
-
----
-
-# 3. Deploy Apps Script
-
-Klik:
-
-Deploy → New Deployment
-
-Pilih:
-
-* Type: Web App
-* Execute As: Me
-* Who Has Access: Anyone
-
-Klik Deploy.
-
-Copy URL Web App.
-
-Contoh:
-
-```text
-https://script.google.com/macros/s/AKfycbxxxxxxxx/exec
-```
-
----
-
-# 4. Coding HTML Form Order
-
-Ganti:
-
-```javascript
-const scriptURL = "PASTE_URL_APPS_SCRIPT";
-```
-
-menjadi URL Apps Script milik Anda.
-
----
-
-```html
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -100,67 +5,69 @@ menjadi URL Apps Script milik Anda.
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Form Order</title>
 
-  <style>
+   <style>
     body{
       font-family:Arial, sans-serif;
-      background:#f2f2f2;
+      background:whitesmoke;
       display:flex;
       justify-content:center;
       align-items:center;
       min-height:100vh;
+    
+
     }
 
     .container{
-      background:white;
+      background:rgb(76, 93, 245);
       width:400px;
-      padding:25px;
-      border-radius:15px;
-      box-shadow:0 5px 15px rgba(0,0,0,0.2);
+      padding: 25px;
+      border-radius:25px;
+      box-shadow:0 5px 15px rgba(0, 255, 0, 0.2);
     }
 
-    h2{
+    h7{
       text-align:center;
       margin-bottom:20px;
     }
 
     .form-group{
-      margin-bottom:15px;
+      margin:10px;
+      size-adjust:10px;
     }
 
     label{
-      display:block;
-      margin-bottom:5px;
+      display:flex;
+      margin-bottom:10px;
       font-weight:bold;
     }
-
-    input,
+input,
     textarea,
     select{
       width:100%;
       padding:10px;
       border-radius:8px;
-      border:1px solid #ccc;
+      border:1px solid #14a707;
       font-size:14px;
     }
 
     textarea{
-      resize:none;
-      height:80px;
+      resize:auto;
+      height:40px;
     }
 
     button{
       width:100%;
       padding:12px;
-      border:none;
+      border:auto;
       border-radius:8px;
       font-size:16px;
       cursor:pointer;
       margin-top:10px;
     }
-
+    
     .btn-submit{
-      background:#007bff;
-      color:white;
+      background:#ffffff;
+      color:rgb(11, 255, 3);
     }
 
     .btn-submit:hover{
@@ -169,11 +76,11 @@ menjadi URL Apps Script milik Anda.
 
     .btn-wa{
       background:#25D366;
-      color:white;
+      color:#06049c;
     }
 
     .btn-wa:hover{
-      background:#1ebc59;
+      background:rgb(118, 100, 218);
     }
 
     .success{
@@ -187,62 +94,92 @@ menjadi URL Apps Script milik Anda.
 
 <div class="container">
 
-  <h2>FORM ORDER</h2>
+  <h7>FORM ORDER SOW DENPASAR</h7>
 
   <form id="orderForm">
 
     <div class="form-group">
-      <label>Nama Customer</label>
+      <label>Nama</label>
       <input type="text" id="nama" required>
     </div>
-
-    <div class="form-group">
-      <label>No WhatsApp</label>
-      <input type="text" id="whatsapp" required>
+<div class="form-group">
+      <label>NIP ID</label>
+      <input type="number" id="nip" name="angka">
     </div>
 
     <div class="form-group">
-      <label>Produk</label>
-      <select id="produk">
-        <option>Kopi Arabica</option>
-        <option>Kopi Robusta</option>
-        <option>Matcha Latte</option>
+      <label>Kode Cabang</label>
+      <select id="cabang">
+        <option>D05248-DENPASAR UTARA</option>
+        <option>D05249-DENPASAR TIMUR</option>
+        <option>D05250-DENPASAR SELATAN</option>
+        <option>D05251-DENPASAR BARAT</option>
+        <option>D05252-DENPASAR KOTA</option>
+        <option>D05253-DENPASAR KUTA</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>JENIS KENDALA</label>
+      <select id="kendala">
+        <option>Kendala Teknis</option>
+        <option>Kendala Administrasi</option>
+        <option>Kendala Logistik</option>
+        <option>Kendala Lainnya</option>
       </select>
     </div>
 
     <div class="form-group">
-      <label>Jumlah</label>
-      <input type="number" id="jumlah" required>
+      <label>Deskripsi</label>
+      <textarea id="deskripsi"></textarea>
     </div>
 
-    <div class="form-group">
-      <label>Alamat</label>
-      <textarea id="alamat"></textarea>
+     <div class="form-group">
+      <label>No WhatsApp</label>
+      <input type="number" id="whatsapp" required
     </div>
 
-    <div class="form-group">
-      <label>Catatan</label>
-      <textarea id="catatan"></textarea>
+     <div class="form-group">
+      <label>Tanggal</label>
+      <input type="date" id="tanggal" required>
+    </div>  <div class="form-group">
+      <label>Jam</label>
+      <input type="time" id="jam" required>
     </div>
 
-    <button type="submit" class="btn-submit">
-      Simpan Order
-    </button>
+    <div class="order-box">
+        <h9>Kode:</h9>
+        <p id="kode">Memuat...</p>
+        <p style="font-size: 12px; color: gray;"></p>
+        <p style="text-align: center; font-size: 12px; color: gray;">Silakan simpan order dan kirim ke grup WhatsApp</p>
+    </div>
+ <script>
+        function generateOrderNumber() {
+            // Membuat awalan (misal: SOW-)
+            const prefix = "SOW-";
+            
+            // Membuat angka acak 6 digit (contoh: 100000 - 999999)
+            const randomNum = Math.floor(100000 + Math.random() * 900000);
+            
+            // Menggabungkan prefix dan angka
+            const finalOrder = prefix + randomNum;
+            
+            // Menampilkan di elemen HTML
+            document.getElementById("kode").innerText = finalOrder;
+        }
 
-    <button type="button" class="btn-wa" onclick="kirimWA()">
-      Kirim WhatsApp
-    </button>
+        // Jalankan fungsi saat halaman dimuat
+        window.onload = generateOrderNumber;
+    </script>
 
+    <button onclick="kirimWhatsApp()"button">
+      SAVE and SEND to WhatsApp
+      </button>
     <div class="success" id="success"></div>
-
   </form>
 
 </div>
-
 <script>
-
-const scriptURL = "PASTE_URL_APPS_SCRIPT";
-
+    const scriptURL ="https://script.google.com/macros/s/AKfycby7Qp-gxTXZ-ZsgVjfY63yoDgKrJSbgp0NKNbxFXO7kRDSSEF7pnFGHDv0M5shtmLT8iA/exec";
 const form = document.getElementById('orderForm');
 
 form.addEventListener('submit', e => {
@@ -251,11 +188,14 @@ form.addEventListener('submit', e => {
 
   const data = {
     nama: document.getElementById('nama').value,
+    nip: document.getElementById('nip').value,
+    cabang: document.getElementById('cabang').value,
+    kendala: document.getElementById('kendala').value,
+    deskripsi: document.getElementById('deskripsi').value,
     whatsapp: document.getElementById('whatsapp').value,
-    produk: document.getElementById('produk').value,
-    jumlah: document.getElementById('jumlah').value,
-    alamat: document.getElementById('alamat').value,
-    catatan: document.getElementById('catatan').value
+    tanggal: document.getElementById('tanggal').value,
+    jam: document.getElementById('jam').value,
+    kode: document.getElementById('kode').innerText
   };
 
   fetch(scriptURL, {
@@ -274,69 +214,37 @@ form.addEventListener('submit', e => {
 
 });
 
-function kirimWA(){
+    function kirimWhatsApp(){
 
-  let nama = document.getElementById('nama').value;
-  let whatsapp = document.getElementById('whatsapp').value;
-  let produk = document.getElementById('produk').value;
-  let jumlah = document.getElementById('jumlah').value;
-  let alamat = document.getElementById('alamat').value;
-  let catatan = document.getElementById('catatan').value;
+  let nama = document.getElementById("nama").value;
+  let nip = document.getElementById("nip").value;
+  let cabang = document.getElementById("cabang").value;
+  let kendala = document.getElementById("kendala").value;
+  let deskripsi = document.getElementById("deskripsi").value;
+  let whatsapp = document.getElementById("whatsapp").value;
+  let tanggal = document.getElementById("tanggal").value;
+  let jam = document.getElementById("jam").value;
+  let kodeOrder = document.getElementById("kode").innerText;
 
-  let nomorAdmin = '6281234567890';
+  let nomorAdmin = '6281246443838';
 
-  let pesan =
+   let pesan =
 `Halo Admin,%0A%0ASaya ingin order:%0A%0A
 Nama: ${nama}%0A
-WhatsApp: ${whatsapp}%0A
-Produk: ${produk}%0A
-Jumlah: ${jumlah}%0A
-Alamat: ${alamat}%0A
-Catatan: ${catatan}`;
+NIP: ${nip}%0A
+Kode Cabang: ${cabang}%0A
+Jenis Kendala: ${kendala}%0A
+Deskripsi: ${deskripsi}%0A
+No WhatsApp: ${whatsapp}%0A
+Tanggal: ${tanggal}%0A
+Jam: ${jam}%0A
+Kode Order: ${kodeOrder}`;
 
-  window.open(`https://wa.me/${nomorAdmin}?text=${pesan}`,'_blank');
+  let admiWa = 'https://wa.me/' + nomorAdmin + '?text=' + pesan;
+  window.open(admiWa,'_blank');
 }
 
 </script>
 
 </body>
 </html>
-```
-
----
-
-# 5. Hasil Sistem
-
-Setiap order:
-
-* Masuk otomatis ke Google Spreadsheet
-* Bisa direkap harian/bulanan
-* Bisa dibuka dari HP
-* Bisa dikirim ke WhatsApp admin
-
----
-
-# 6. Hosting Gratis
-
-Untuk online gratis bisa upload ke:
-
-* GitHub Pages
-* Netlify
-* Vercel
-* Firebase Hosting
-
----
-
-# 7. Upgrade Selanjutnya
-
-Bisa ditambahkan:
-
-* Login admin
-* Dashboard penjualan
-* Cetak invoice
-* Upload bukti transfer
-* Status order
-* Export Excel/PDF
-* Multi user
-* Notifikasi Telegram
-* QRIS pembayaran
