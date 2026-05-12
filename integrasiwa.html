@@ -1,0 +1,342 @@
+# Sistem Form Order Terhubung Google Spreadsheet + WhatsApp
+
+Sistem ini memiliki fitur:
+
+* Input order customer
+* Data otomatis masuk ke Google Spreadsheet
+* Tombol kirim ke WhatsApp admin
+* Rekap order otomatis
+* Bisa dipakai di HP & laptop
+
+---
+
+# 1. Buat Google Spreadsheet
+
+1. Buka Google Spreadsheet
+2. Buat spreadsheet baru
+3. Buat header seperti ini:
+
+| Tanggal | Nama | WhatsApp | Produk | Jumlah | Alamat | Catatan |
+| ------- | ---- | -------- | ------ | ------ | ------ | ------- |
+
+---
+
+# 2. Buka Google Apps Script
+
+Klik:
+
+Extensions → Apps Script
+
+Hapus semua kode lalu ganti dengan kode berikut:
+
+```javascript
+function doPost(e) {
+
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Sheet1");
+
+  var data = JSON.parse(e.postData.contents);
+
+  sheet.appendRow([
+    new Date(),
+    data.nama,
+    data.whatsapp,
+    data.produk,
+    data.jumlah,
+    data.alamat,
+    data.catatan
+  ]);
+
+  return ContentService
+    .createTextOutput(JSON.stringify({
+      status: "success"
+    }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+```
+
+---
+
+# 3. Deploy Apps Script
+
+Klik:
+
+Deploy → New Deployment
+
+Pilih:
+
+* Type: Web App
+* Execute As: Me
+* Who Has Access: Anyone
+
+Klik Deploy.
+
+Copy URL Web App.
+
+Contoh:
+
+```text
+https://script.google.com/macros/s/AKfycbxxxxxxxx/exec
+```
+
+---
+
+# 4. Coding HTML Form Order
+
+Ganti:
+
+```javascript
+const scriptURL = "PASTE_URL_APPS_SCRIPT";
+```
+
+menjadi URL Apps Script milik Anda.
+
+---
+
+```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Form Order</title>
+
+  <style>
+    body{
+      font-family:Arial, sans-serif;
+      background:#f2f2f2;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      min-height:100vh;
+    }
+
+    .container{
+      background:white;
+      width:400px;
+      padding:25px;
+      border-radius:15px;
+      box-shadow:0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    h2{
+      text-align:center;
+      margin-bottom:20px;
+    }
+
+    .form-group{
+      margin-bottom:15px;
+    }
+
+    label{
+      display:block;
+      margin-bottom:5px;
+      font-weight:bold;
+    }
+
+    input,
+    textarea,
+    select{
+      width:100%;
+      padding:10px;
+      border-radius:8px;
+      border:1px solid #ccc;
+      font-size:14px;
+    }
+
+    textarea{
+      resize:none;
+      height:80px;
+    }
+
+    button{
+      width:100%;
+      padding:12px;
+      border:none;
+      border-radius:8px;
+      font-size:16px;
+      cursor:pointer;
+      margin-top:10px;
+    }
+
+    .btn-submit{
+      background:#007bff;
+      color:white;
+    }
+
+    .btn-submit:hover{
+      background:#0056b3;
+    }
+
+    .btn-wa{
+      background:#25D366;
+      color:white;
+    }
+
+    .btn-wa:hover{
+      background:#1ebc59;
+    }
+
+    .success{
+      text-align:center;
+      color:green;
+      margin-top:10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <h2>FORM ORDER</h2>
+
+  <form id="orderForm">
+
+    <div class="form-group">
+      <label>Nama Customer</label>
+      <input type="text" id="nama" required>
+    </div>
+
+    <div class="form-group">
+      <label>No WhatsApp</label>
+      <input type="text" id="whatsapp" required>
+    </div>
+
+    <div class="form-group">
+      <label>Produk</label>
+      <select id="produk">
+        <option>Kopi Arabica</option>
+        <option>Kopi Robusta</option>
+        <option>Matcha Latte</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Jumlah</label>
+      <input type="number" id="jumlah" required>
+    </div>
+
+    <div class="form-group">
+      <label>Alamat</label>
+      <textarea id="alamat"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Catatan</label>
+      <textarea id="catatan"></textarea>
+    </div>
+
+    <button type="submit" class="btn-submit">
+      Simpan Order
+    </button>
+
+    <button type="button" class="btn-wa" onclick="kirimWA()">
+      Kirim WhatsApp
+    </button>
+
+    <div class="success" id="success"></div>
+
+  </form>
+
+</div>
+
+<script>
+
+const scriptURL = "PASTE_URL_APPS_SCRIPT";
+
+const form = document.getElementById('orderForm');
+
+form.addEventListener('submit', e => {
+
+  e.preventDefault();
+
+  const data = {
+    nama: document.getElementById('nama').value,
+    whatsapp: document.getElementById('whatsapp').value,
+    produk: document.getElementById('produk').value,
+    jumlah: document.getElementById('jumlah').value,
+    alamat: document.getElementById('alamat').value,
+    catatan: document.getElementById('catatan').value
+  };
+
+  fetch(scriptURL, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  })
+  .then(response => {
+    document.getElementById('success').innerHTML =
+      'Order berhasil disimpan!';
+
+    form.reset();
+  })
+  .catch(error => {
+    alert('Gagal menyimpan data');
+  });
+
+});
+
+function kirimWA(){
+
+  let nama = document.getElementById('nama').value;
+  let whatsapp = document.getElementById('whatsapp').value;
+  let produk = document.getElementById('produk').value;
+  let jumlah = document.getElementById('jumlah').value;
+  let alamat = document.getElementById('alamat').value;
+  let catatan = document.getElementById('catatan').value;
+
+  let nomorAdmin = '6281234567890';
+
+  let pesan =
+`Halo Admin,%0A%0ASaya ingin order:%0A%0A
+Nama: ${nama}%0A
+WhatsApp: ${whatsapp}%0A
+Produk: ${produk}%0A
+Jumlah: ${jumlah}%0A
+Alamat: ${alamat}%0A
+Catatan: ${catatan}`;
+
+  window.open(`https://wa.me/${nomorAdmin}?text=${pesan}`,'_blank');
+}
+
+</script>
+
+</body>
+</html>
+```
+
+---
+
+# 5. Hasil Sistem
+
+Setiap order:
+
+* Masuk otomatis ke Google Spreadsheet
+* Bisa direkap harian/bulanan
+* Bisa dibuka dari HP
+* Bisa dikirim ke WhatsApp admin
+
+---
+
+# 6. Hosting Gratis
+
+Untuk online gratis bisa upload ke:
+
+* GitHub Pages
+* Netlify
+* Vercel
+* Firebase Hosting
+
+---
+
+# 7. Upgrade Selanjutnya
+
+Bisa ditambahkan:
+
+* Login admin
+* Dashboard penjualan
+* Cetak invoice
+* Upload bukti transfer
+* Status order
+* Export Excel/PDF
+* Multi user
+* Notifikasi Telegram
+* QRIS pembayaran
